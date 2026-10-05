@@ -1,9 +1,7 @@
 import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
-import { TestWorkflowEnvironment } from "@temporalio/testing";
-import { randomUUID } from "node:crypto";
-import { bundleWorkflowCode, Worker, type WorkflowBundleWithSourceMap } from "@temporalio/worker";
+import { setUpSnackTestEnv } from "../../test-utils/snackTestEnv";
 import type { SnackWorkflowResult } from "../snackWorkflow";
-import { pythonCheckSnackV2Variants, sweetCookie, type SnackActivitiesV2 } from "./activities";
+import { pythonCheckSnackV2Variants, sweetCookie } from "./activities";
 import { SNACK_CHECK_VALIDATION_ERROR } from "../validation";
 import { snackWorkflowV2, snackWorkflowV2ZodV4 } from "./snackWorkflowV2";
 
@@ -15,41 +13,7 @@ const zodFlavors: { zod: string; workflow: SnackWorkflowV2 }[] = [
 ];
 
 describe("snackWorkflowV2 against a simulated Python checkSnack", () => {
-  let testEnv: TestWorkflowEnvironment;
-  let workflowBundle: WorkflowBundleWithSourceMap;
-
-  beforeAll(async () => {
-    testEnv = await TestWorkflowEnvironment.createTimeSkipping();
-    workflowBundle = await bundleWorkflowCode({
-      workflowsPath: require.resolve("./snackWorkflowV2"),
-    });
-  });
-
-  afterAll(async () => {
-    await testEnv?.teardown();
-  });
-
-  // Each run gets its own worker and task queue, so that each one registers a different
-  // implementation under the same activity name, `checkSnack`.
-  async function runSnackWorkflow(
-    checkSnack: SnackActivitiesV2["checkSnack"],
-    workflow: SnackWorkflowV2,
-  ): Promise<SnackWorkflowResult> {
-    const taskQueue = `snack-v2-${randomUUID()}`;
-    const worker = await Worker.create({
-      connection: testEnv.nativeConnection,
-      taskQueue,
-      workflowBundle,
-      activities: { checkSnack },
-    });
-    return worker.runUntil(
-      testEnv.client.workflow.execute(workflow, {
-        args: [{ photoUrl: "https://example.com/snack.jpg", checkFlavors: true }],
-        taskQueue,
-        workflowId: taskQueue,
-      }),
-    );
-  }
+  const runSnackWorkflow = setUpSnackTestEnv(require.resolve("./snackWorkflowV2"));
 
   async function expectValidationFailure(run: Promise<SnackWorkflowResult>): Promise<void> {
     const error = await run.catch((err: unknown) => err);
