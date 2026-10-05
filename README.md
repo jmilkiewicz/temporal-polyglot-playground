@@ -136,12 +136,12 @@ flavor that is not listed is not present. `snackWorkflowV2` validates the payloa
 non-retryable `ApplicationFailure` (type `SnackCheckResultValidationError`).
 `snackWorkflowV2ZodV4` is the same workflow with the schema imported from `"zod/v4"`.
 
-| Activity               | Payload                                | Result (both `"zod"` and `"zod/v4"`) |
-| ---------------------- | -------------------------------------- | ------------------------------------ |
-| `sweetCandy`           | `{ flavors: ["SWEET"], ... }`          | `isSweet: true`                      |
-| `spicyOnly`            | `{ flavors: ["SPICY"], ... }`          | `isSweet: false`                     |
-| `lowercaseFlavor`      | `{ flavors: ["sweet"], ... }`          | Rejected                             |
-| `unknownFlavorInArray` | `{ flavors: ["SWEET", "UMAMI"], ... }` | Rejected                             |
+| Activity          | Payload                                | Result (both `"zod"` and `"zod/v4"`) |
+| ----------------- | -------------------------------------- | ------------------------------------ |
+| `sweetCandy`      | `{ flavors: ["SWEET"], ... }`          | `isSweet: true`                      |
+| `spicyOnly`       | `{ flavors: ["SPICY"], ... }`          | `isSweet: false`                     |
+| `lowercaseFlavor` | `{ flavors: ["sweet"], ... }`          | Rejected                             |
+| `unknownFlavor`   | `{ flavors: ["SWEET", "UMAMI"], ... }` | Rejected                             |
 
 `spicyOnly` is the array counterpart of the incomplete record above. Both Zod versions accept it,
 and the answer is correct.

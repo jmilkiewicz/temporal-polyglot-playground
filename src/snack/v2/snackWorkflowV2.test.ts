@@ -43,7 +43,7 @@ describe("snackWorkflowV2 against a simulated Python checkSnack", () => {
 
     it("rejects an unknown flavor in the array", async () => {
       await expectValidationFailure(
-        runSnackWorkflow(pythonCheckSnackV2Variants.unknownFlavorInArray, workflow),
+        runSnackWorkflow(pythonCheckSnackV2Variants.unknownFlavor, workflow),
       );
     });
   });
