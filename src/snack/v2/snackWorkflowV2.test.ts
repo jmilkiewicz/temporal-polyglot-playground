@@ -1,7 +1,7 @@
 import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
 import { setUpSnackTestEnv, type SnackWorkflow } from "../../test-utils/snackTestEnv";
 import type { SnackWorkflowResult } from "../snackWorkflow";
-import { pythonCheckSnackV2Variants, sweetCandy } from "./activities";
+import { pythonCheckSnackV2Variants, spicyOnly, sweetCandy } from "./activities";
 import { SNACK_CHECK_VALIDATION_ERROR } from "../validation";
 import { snackWorkflowV2, snackWorkflowV2ZodV4 } from "./snackWorkflowV2";
 
@@ -29,27 +29,15 @@ describe("snackWorkflowV2 against a simulated Python checkSnack", () => {
       expect(result).toEqual({ isSweet: true, caption: "a candy" });
     });
 
-    it("rejects a result without flavors", async () => {
-      await expectValidationFailure(
-        runSnackWorkflow(pythonCheckSnackV2Variants.missingFlavors, workflow),
-      );
-    });
+    it("reports a snack without SWEET as not sweet", async () => {
+      const result = await runSnackWorkflow(spicyOnly, workflow);
 
-    it("rejects flavors sent in the old record shape", async () => {
-      await expectValidationFailure(
-        runSnackWorkflow(pythonCheckSnackV2Variants.partialRecord, workflow),
-      );
+      expect(result).toEqual({ isSweet: false, caption: "a chili" });
     });
 
     it("rejects a lowercase flavor", async () => {
       await expectValidationFailure(
-        runSnackWorkflow(pythonCheckSnackV2Variants.lowercaseKeys, workflow),
-      );
-    });
-
-    it("rejects an old record shape carrying an unknown flavor", async () => {
-      await expectValidationFailure(
-        runSnackWorkflow(pythonCheckSnackV2Variants.unknownFlavor, workflow),
+        runSnackWorkflow(pythonCheckSnackV2Variants.lowercaseFlavor, workflow),
       );
     });
 

@@ -104,26 +104,24 @@ Two details the tests make explicit:
   stuck workflow. The test worker sets `workflowFailureErrorTypes: { "*": ["TypeError"] }` so the
   test can observe the exception.
 
-### Adding Zod validation does not fix it (`snackWorkflowWithValidationZodV3`)
+### A record contract cannot be fully validated (`snackWorkflowWithValidationZodV3`)
 
-`snackWorkflowWithValidationZodV3` and `snackWorkflowWithValidationZodV4` run the same naive logic, but
-first validate the activity result against a schema with the same line in both versions:
+`snackWorkflowWithValidationZodV3` and `snackWorkflowWithValidationZodV4` run the same naive logic,
+but first validate the activity result. Both schemas contain the same line,
 `flavors: z.record(SnackFlavor, z.boolean()).nullable()`. `schema.v3.ts` imports it from `"zod"`,
 `schema.v4.ts` from `"zod/v4"`.
 
-| Variant          | `"zod"`                               | `"zod/v4"` |
-| ---------------- | ------------------------------------- | ---------- |
-| `missingFlavors` | Rejected                              | Rejected   |
-| `partialRecord`  | **Accepted**, `isSweet` is still lost | Rejected   |
-| `lowercaseKeys`  | Rejected                              | Rejected   |
-| `unknownFlavor`  | Rejected                              | Rejected   |
+For the incomplete record `{ flavors: { SPICY: false }, caption: "a cookie" }`:
 
-With an enum as the key, Zod 3 treats the record as partial and Zod 4 as exhaustive. So the
-incomplete object, the case the validation was supposed to catch, passes in Zod 3. Zod 3's
-inferred type even says so (`SWEET: boolean | undefined`), but nothing makes the workflow look at
-it. The tests cover the `partialRecord` row.
+| Schema     | Result                                          |
+| ---------- | ----------------------------------------------- |
+| `"zod"`    | **Accepted**. `isSweet` is lost, as without Zod |
+| `"zod/v4"` | Rejected                                        |
 
-### The fixed contract (`src/snack/v2/`)
+With an enum as the key, Zod 3 treats the record as partial and Zod 4 as exhaustive. So whether the
+validation catches an incomplete record depends on the import path.
+
+### An array contract validates the same way (`src/snack/v2/`)
 
 ```ts
 export const SnackCheckResultV2 = z.object({
@@ -132,25 +130,18 @@ export const SnackCheckResultV2 = z.object({
 });
 ```
 
-The activity sends the list of flavors it found. `snackWorkflowV2` validates the payload at
-runtime, builds the full `Record<SnackFlavor, boolean>` locally from `SNACK_FLAVORS`, and on a
-validation error throws a non-retryable `ApplicationFailure` (type
-`SnackCheckResultValidationError`), so the workflow fails instead of retrying the task forever.
+The activity sends the list of flavors it found. There is no such thing as an incomplete list: a
+flavor that is not listed is not present. `snackWorkflowV2` validates the payload, builds the full
+`Record<SnackFlavor, boolean>` locally from `SNACK_FLAVORS`, and on a validation error throws a
+non-retryable `ApplicationFailure` (type `SnackCheckResultValidationError`).
 `snackWorkflowV2ZodV4` is the same workflow with the schema imported from `"zod/v4"`.
 
-| Variant                | Payload sent by "Python"                                | Symptom (both `"zod"` and `"zod/v4"`)       |
-| ---------------------- | ------------------------------------------------------- | ------------------------------------------- |
-| `missingFlavors`       | `{ caption: "a cookie" }`                               | Workflow fails on validation at `flavors`   |
-| `partialRecord`        | `{ flavors: { SPICY: false }, ... }` (old record shape) | Workflow fails on validation at `flavors`   |
-| `lowercaseKeys`        | `{ flavors: ["sweet"], ... }`                           | Workflow fails on validation at `flavors.0` |
-| `unknownFlavor`        | `{ flavors: { SWEET: true, ..., UMAMI: true }, ... }`   | Workflow fails on validation at `flavors`   |
-| `unknownFlavorInArray` | `{ flavors: ["SWEET", "UMAMI"], ... }`                  | Workflow fails on validation at `flavors.1` |
+| Activity               | Payload                                | Result (both `"zod"` and `"zod/v4"`) |
+| ---------------------- | -------------------------------------- | ------------------------------------ |
+| `sweetCandy`           | `{ flavors: ["SWEET"], ... }`          | `isSweet: true`                      |
+| `spicyOnly`            | `{ flavors: ["SPICY"], ... }`          | `isSweet: false`                     |
+| `lowercaseFlavor`      | `{ flavors: ["sweet"], ... }`          | Rejected                             |
+| `unknownFlavorInArray` | `{ flavors: ["SWEET", "UMAMI"], ... }` | Rejected                             |
 
-`z.array` gives the same verdict at the same path under both import paths. Only
-the wording of the messages differs between Zod 3 and Zod 4. The tests only check that the
-workflow fails with `SnackCheckResultValidationError`, not the wording.
-
-One more trap shows up here. `"zod/v4"` installs its English messages as a module side effect, and
-zod declares `"sideEffects": false`. The webpack build of Temporal's workflow bundle therefore
-drops that module, and inside a workflow every Zod 4 issue reads just `"Invalid input"`.
-`v2/schema.v4.ts` calls `z.config(z.locales.en())` explicitly to get the full messages back.
+`spicyOnly` is the array counterpart of the incomplete record above. Both Zod versions accept it,
+and the answer is correct.
