@@ -12,9 +12,10 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
   const runSnackWorkflow = setUpSnackTestEnv(require.resolve("./snackWorkflow"));
 
   it("crashes with a TypeError when reading an undefined property", async () => {
-    const error = await runSnackWorkflow(pythonCheckSnackVariants.missingFlavors, snackWorkflow).catch(
-      (err: unknown) => err,
-    );
+    const error = await runSnackWorkflow(
+      pythonCheckSnackVariants.missingFlavors,
+      snackWorkflow,
+    ).catch((err: unknown) => err);
 
     expect(error).toBeInstanceOf(WorkflowFailedError);
     const cause = (error as WorkflowFailedError).cause;
@@ -27,7 +28,10 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
 
   it("loses isSweet when the SWEET key is missing", async () => {
     const partial = await runSnackWorkflow(pythonCheckSnackVariants.partialRecord, snackWorkflow);
-    const lowerCased = await runSnackWorkflow(pythonCheckSnackVariants.lowercaseKeys, snackWorkflow);
+    const lowerCased = await runSnackWorkflow(
+      pythonCheckSnackVariants.lowercaseKeys,
+      snackWorkflow,
+    );
     const wellBehavedSweet = await runSnackWorkflow(explicitlySweet, snackWorkflow);
 
     expect(wellBehavedSweet.isSweet).toBe(true);

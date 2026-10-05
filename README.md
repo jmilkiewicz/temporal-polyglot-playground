@@ -37,6 +37,15 @@ on the SDK side guarantees it.
 
 Note: `ts-jest` 29.4 requires TypeScript `<7`, which is why TypeScript is pinned to 6.0.3.
 
+## Formatting
+
+Code is formatted with Prettier (pinned in `devDependencies`, config in `.prettierrc.json`).
+
+```sh
+npm run format        # rewrite files in place
+npm run format:check  # fail if anything is not formatted
+```
+
 ## Running manually against a server (docker-compose)
 
 This is a separate path. `npm test` does not use it. The worker and client run straight from
@@ -77,12 +86,12 @@ if (flavors !== null) {
 return { isSweet: false, caption };
 ```
 
-| Variant         | Payload sent by "Python"                                                      | Symptom                                                                                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `missingFlavors` | `{ caption: "a cookie" }` (Pydantic `model_dump(exclude_none=True)`)          | Workflow fails with `TypeError: Cannot read properties of undefined (reading 'SWEET')`. The exception points at the guard, not at the producer that dropped the key. |
-| `partialRecord`  | `{ flavors: { SPICY: false }, caption: "a cookie" }`                          | No error. The result has no `isSweet` at all, so a caller branching on it treats the snack as not sweet.                                                           |
-| `lowercaseKeys`  | `{ flavors: { sweet: true, salty: false, spicy: false }, caption: "a cookie" }` | No error. Same as above, although the payload says the cookie is sweet. No key matches, so the system consistently detects nothing.                              |
-| `unknownFlavor`  | `{ flavors: { SWEET: true, SALTY: false, SPICY: false, UMAMI: true }, ... }`  | No error, `isSweet: true`. The extra `UMAMI` key passes through unnoticed.                                                                                         |
+| Variant          | Payload sent by "Python"                                                        | Symptom                                                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `missingFlavors` | `{ caption: "a cookie" }` (Pydantic `model_dump(exclude_none=True)`)            | Workflow fails with `TypeError: Cannot read properties of undefined (reading 'SWEET')`. The exception points at the guard, not at the producer that dropped the key. |
+| `partialRecord`  | `{ flavors: { SPICY: false }, caption: "a cookie" }`                            | No error. The result has no `isSweet` at all, so a caller branching on it treats the snack as not sweet.                                                             |
+| `lowercaseKeys`  | `{ flavors: { sweet: true, salty: false, spicy: false }, caption: "a cookie" }` | No error. Same as above, although the payload says the cookie is sweet. No key matches, so the system consistently detects nothing.                                  |
+| `unknownFlavor`  | `{ flavors: { SWEET: true, SALTY: false, SPICY: false, UMAMI: true }, ... }`    | No error, `isSweet: true`. The extra `UMAMI` key passes through unnoticed.                                                                                           |
 
 Two details the tests make explicit:
 
@@ -91,23 +100,23 @@ Two details the tests make explicit:
   `{ caption: "a cookie" }`, although the type says `isSweet: boolean`. A well-behaved producer
   (`explicitlySweet` in the tests) gets `isSweet: true` through the same workflow.
 - A plain `TypeError` thrown from workflow code does not fail the workflow by default. It fails the
-  workflow *task*, which Temporal retries forever, so in production `missingFlavors` shows up as a
+  workflow _task_, which Temporal retries forever, so in production `missingFlavors` shows up as a
   stuck workflow. The test worker sets `workflowFailureErrorTypes: { "*": ["TypeError"] }` so the
   test can observe the exception.
 
-### Adding Zod validation does not fix it (`snackWorkflowWithValidation`)
+### Adding Zod validation does not fix it (`snackWorkflowWithValidationZodV3`)
 
-`snackWorkflowWithValidation` and `snackWorkflowWithValidationZodV4` run the same naive logic, but
+`snackWorkflowWithValidationZodV3` and `snackWorkflowWithValidationZodV4` run the same naive logic, but
 first validate the activity result against a schema with the same line in both versions:
 `flavors: z.record(SnackFlavor, z.boolean()).nullable()`. `schema.v3.ts` imports it from `"zod"`,
 `schema.v4.ts` from `"zod/v4"`.
 
-| Variant          | `"zod"`                                   | `"zod/v4"`             |
-| ---------------- | ----------------------------------------- | ---------------------- |
-| `missingFlavors` | Rejected                                  | Rejected               |
-| `partialRecord`  | **Accepted**, `isSweet` is still lost     | Rejected               |
-| `lowercaseKeys`  | Rejected                                  | Rejected               |
-| `unknownFlavor`  | Rejected                                  | Rejected               |
+| Variant          | `"zod"`                               | `"zod/v4"` |
+| ---------------- | ------------------------------------- | ---------- |
+| `missingFlavors` | Rejected                              | Rejected   |
+| `partialRecord`  | **Accepted**, `isSweet` is still lost | Rejected   |
+| `lowercaseKeys`  | Rejected                              | Rejected   |
+| `unknownFlavor`  | Rejected                              | Rejected   |
 
 With an enum as the key, Zod 3 treats the record as partial and Zod 4 as exhaustive. So the
 incomplete object, the case the validation was supposed to catch, passes in Zod 3. Zod 3's
@@ -129,13 +138,13 @@ validation error throws a non-retryable `ApplicationFailure` (type
 `SnackCheckResultValidationError`), so the workflow fails instead of retrying the task forever.
 `snackWorkflowV2ZodV4` is the same workflow with the schema imported from `"zod/v4"`.
 
-| Variant                | Payload sent by "Python"                                  | Symptom (both `"zod"` and `"zod/v4"`)              |
-| ---------------------- | --------------------------------------------------------- | ------------------------------------------------- |
-| `missingFlavors`         | `{ caption: "a cookie" }`                                 | Workflow fails on validation at `flavors`          |
-| `partialRecord`        | `{ flavors: { SPICY: false }, ... }` (old record shape)   | Workflow fails on validation at `flavors`          |
-| `lowercaseKeys`        | `{ flavors: ["sweet"], ... }`                             | Workflow fails on validation at `flavors.0`        |
-| `unknownFlavor`        | `{ flavors: { SWEET: true, ..., UMAMI: true }, ... }`     | Workflow fails on validation at `flavors`          |
-| `unknownFlavorInArray` | `{ flavors: ["SWEET", "UMAMI"], ... }`                    | Workflow fails on validation at `flavors.1`        |
+| Variant                | Payload sent by "Python"                                | Symptom (both `"zod"` and `"zod/v4"`)       |
+| ---------------------- | ------------------------------------------------------- | ------------------------------------------- |
+| `missingFlavors`       | `{ caption: "a cookie" }`                               | Workflow fails on validation at `flavors`   |
+| `partialRecord`        | `{ flavors: { SPICY: false }, ... }` (old record shape) | Workflow fails on validation at `flavors`   |
+| `lowercaseKeys`        | `{ flavors: ["sweet"], ... }`                           | Workflow fails on validation at `flavors.0` |
+| `unknownFlavor`        | `{ flavors: { SWEET: true, ..., UMAMI: true }, ... }`   | Workflow fails on validation at `flavors`   |
+| `unknownFlavorInArray` | `{ flavors: ["SWEET", "UMAMI"], ... }`                  | Workflow fails on validation at `flavors.1` |
 
 `z.array` gives the same verdict at the same path under both import paths. Only
 the wording of the messages differs between Zod 3 and Zod 4. The tests only check that the
