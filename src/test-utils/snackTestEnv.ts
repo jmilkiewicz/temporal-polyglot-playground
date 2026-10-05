@@ -5,7 +5,7 @@ import type { SnackWorkflowResult } from "../snack/snackWorkflow";
 import type { SnackCheckArgs } from "../snack/types";
 
 type CheckSnack = (args: SnackCheckArgs) => Promise<unknown>;
-type SnackWorkflow = (args: SnackCheckArgs) => Promise<SnackWorkflowResult>;
+export type SnackWorkflow = (args: SnackCheckArgs) => Promise<SnackWorkflowResult>;
 
 // Registers beforeAll/afterAll for a time-skipping test environment and returns a function that
 // runs one snack workflow against the given checkSnack implementation.
