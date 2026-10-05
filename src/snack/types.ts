@@ -1,8 +1,5 @@
-import { z } from "zod";
-
 export const SNACK_FLAVORS = ["SWEET", "SALTY", "SPICY"] as const;
-export const SnackFlavor = z.enum(SNACK_FLAVORS);
-export type SnackFlavor = z.infer<typeof SnackFlavor>;
+export type SnackFlavor = (typeof SNACK_FLAVORS)[number];
 
 export interface SnackCheckArgs {
   photoUrl: string;
