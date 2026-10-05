@@ -23,3 +23,10 @@ export function parseActivityResult<T>(raw: unknown, schema: ActivityResultSchem
   }
   return parsed.data;
 }
+
+export function assertActivityResult<T>(
+  raw: unknown,
+  schema: ActivityResultSchema<T>,
+): asserts raw is T {
+  parseActivityResult(raw, schema);
+}

@@ -45,7 +45,7 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
     expect(result).toEqual({ isSweet: true, caption: "a cookie" });
   });
 
-  it('still loses isSweet on a partial record validated with "zod v3"', async () => {
+  it('still loses isSweet on a partial record validated with "zod/v3"', async () => {
     const partial = await runSnackWorkflow(
       pythonCheckSnackVariants.partialRecord,
       snackWorkflowWithValidationZodV3,

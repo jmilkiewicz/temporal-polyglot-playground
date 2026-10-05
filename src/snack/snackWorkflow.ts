@@ -3,7 +3,7 @@ import type { SnackActivities } from "./activities";
 import { SnackCheckResultSchema as SchemaFromZod } from "./schema.v3";
 import { SnackCheckResultSchema as SchemaFromZodV4 } from "./schema.v4";
 import type { SnackCheckArgs, SnackCheckResult } from "./types";
-import { parseActivityResult } from "./validation";
+import { assertActivityResult } from "./validation";
 
 export interface SnackWorkflowResult {
   isSweet: boolean;
@@ -32,7 +32,7 @@ export async function snackWorkflowWithValidationZodV3(
   args: SnackCheckArgs,
 ): Promise<SnackWorkflowResult> {
   const result = await checkSnack(args);
-  parseActivityResult(result, SchemaFromZod);
+  assertActivityResult(result, SchemaFromZod);
   return workflowLogic(result);
 }
 
@@ -40,6 +40,6 @@ export async function snackWorkflowWithValidationZodV4(
   args: SnackCheckArgs,
 ): Promise<SnackWorkflowResult> {
   const result = await checkSnack(args);
-  parseActivityResult(result, SchemaFromZodV4);
+  assertActivityResult(result, SchemaFromZodV4);
   return workflowLogic(result);
 }
