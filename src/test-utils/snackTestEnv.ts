@@ -10,6 +10,7 @@ export type SnackWorkflow = (args: SnackCheckArgs) => Promise<SnackWorkflowResul
 // Registers beforeAll/afterAll for a time-skipping test environment and returns a function that
 // runs one snack workflow against the given checkSnack implementation.
 export function setUpSnackTestEnv(workflowsPath: string) {
+  const exportedWorkflows: Record<string, unknown> = require(workflowsPath);
   let testEnv: TestWorkflowEnvironment;
   let workflowBundle: WorkflowBundleWithSourceMap;
 
@@ -26,6 +27,10 @@ export function setUpSnackTestEnv(workflowsPath: string) {
     checkSnack: CheckSnack,
     workflow: SnackWorkflow,
   ): Promise<SnackWorkflowResult> {
+    // A workflow missing from the bundle does not fail: its task is retried until the test times out.
+    if (exportedWorkflows[workflow.name] !== workflow) {
+      throw new Error(`${workflow.name} is not exported by ${workflowsPath}`);
+    }
     const taskQueue = `snack-${randomUUID()}`;
     const worker = await Worker.create({
       connection: testEnv.nativeConnection,
