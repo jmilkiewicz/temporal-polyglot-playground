@@ -8,7 +8,7 @@ export interface SnackActivitiesV2 {
 type CheckSnackV2 = SnackActivitiesV2["checkSnack"];
 
 // A well-behaved implementation of the V2 contract. Used as the happy path.
-export const sweetCookie: CheckSnackV2 = async () => ({
+export const sweetCandy: CheckSnackV2 = async () => ({
   flavors: ["SWEET"],
   caption: "a candy",
 });

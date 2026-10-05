@@ -1,7 +1,7 @@
 import { ApplicationFailure, WorkflowFailedError } from "@temporalio/client";
 import { setUpSnackTestEnv, type SnackWorkflow } from "../../test-utils/snackTestEnv";
 import type { SnackWorkflowResult } from "../snackWorkflow";
-import { pythonCheckSnackV2Variants, sweetCookie } from "./activities";
+import { pythonCheckSnackV2Variants, sweetCandy } from "./activities";
 import { SNACK_CHECK_VALIDATION_ERROR } from "../validation";
 import { snackWorkflowV2, snackWorkflowV2ZodV4 } from "./snackWorkflowV2";
 
@@ -23,8 +23,8 @@ describe("snackWorkflowV2 against a simulated Python checkSnack", () => {
   }
 
   describe.each(zodFlavors)('with the schema imported from "$zod"', ({ workflow }) => {
-    it("finds a sweet cookie sweet", async () => {
-      const result = await runSnackWorkflow(sweetCookie, workflow);
+    it("finds a sweet candy sweet", async () => {
+      const result = await runSnackWorkflow(sweetCandy, workflow);
 
       expect(result).toEqual({ isSweet: true, caption: "a candy" });
     });
