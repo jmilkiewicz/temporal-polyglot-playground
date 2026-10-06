@@ -20,11 +20,11 @@ export const explicitlySweet: CheckSnack = async () => ({
 // workflow.
 export const pythonCheckSnackVariants = {
   // Python: model_dump(exclude_none=True) drops `flavors` entirely when it is None.
-  missingFlavors: async () => ({ caption: "a cookie" }) as unknown as SnackCheckResult,
+  missingFlavors: async () => ({ caption: "no idea" }) as unknown as SnackCheckResult,
 
   // Python: a dict that only contains the flavors the model actually looked at.
   missingSweet: async () =>
-    ({ flavors: { SPICY: false }, caption: "a cookie" }) as unknown as SnackCheckResult,
+    ({ flavors: { SPICY: false, SALTY: true }, caption: "dried fish" }) as unknown as SnackCheckResult,
 
   // Python: an enum serialised by `.value` with lowercase values.
   lowercaseKeys: async () =>
@@ -34,9 +34,9 @@ export const pythonCheckSnackVariants = {
     }) as unknown as SnackCheckResult,
 
   // Python: the enum gained a member that the TypeScript side has never heard of.
-  unknownFlavor: async () =>
+  withUnknownFlavor: async () =>
     ({
-      flavors: { SWEET: true, SALTY: false, SPICY: false, UMAMI: true },
-      caption: "a cookie",
+      flavors: { SWEET: true, SALTY: true, SPICY: true, UMAMI: true },
+      caption: "iberico",
     }) as unknown as SnackCheckResult,
 } satisfies Record<string, CheckSnack>;

@@ -40,9 +40,9 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
   });
 
   it("reports a sweet snack correctly and silently ignores an extra flavor", async () => {
-    const result = await runSnackWorkflow(pythonCheckSnackVariants.unknownFlavor, snackWorkflow);
+    const result = await runSnackWorkflow(pythonCheckSnackVariants.withUnknownFlavor, snackWorkflow);
 
-    expect(result).toEqual({ isSweet: true, caption: "a cookie" });
+    expect(result).toEqual({ isSweet: true, caption: "iberico" });
   });
 
   it('still loses isSweet on a partial record validated with "zod/v3"', async () => {
@@ -65,6 +65,7 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
     expect(cause).toBeInstanceOf(ApplicationFailure);
     expect(cause).toMatchObject({
       type: SNACK_CHECK_VALIDATION_ERROR,
+      details: [{ invalidFields: ["flavors"] }],
     });
   });
 });
