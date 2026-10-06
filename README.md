@@ -79,11 +79,18 @@ at `"zod/v4"` in the same package.
 `SnackCheckResult.flavors` is typed as `Record<SnackFlavor, boolean> | null`, and the workflow does:
 
 ```ts
-const { flavors, caption } = await checkSnack(args);
-if (flavors !== null) {
-  return { isSweet: flavors.SWEET, caption };
+function workflowLogic(snackCheckResult: SnackCheckResult) {
+  const { flavors, caption } = snackCheckResult;
+  if (flavors !== null) {
+    return { isSweet: flavors.SWEET, caption };
+  }
+  return { isSweet: false, caption };
 }
-return { isSweet: false, caption };
+
+export async function snackWorkflow(args: SnackCheckArgs): Promise<SnackWorkflowResult> {
+  const snackCheckResult = await checkSnack(args);
+  return workflowLogic(snackCheckResult);
+}
 ```
 
 | Variant          | Payload sent by "Python"                                                        | Symptom                                                                                                                                                              |
