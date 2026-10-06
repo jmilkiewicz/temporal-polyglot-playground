@@ -62,15 +62,15 @@ export async function snackWorkflow(args: SnackCheckArgs): Promise<SnackWorkflow
 ```
 
 | Variant          | Payload sent by "Python"                                                        | Symptom                                                                                                                                                              |
-| ---------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ---------------- |---------------------------------------------------------------------------------| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `missingFlavors` | `{ caption: "a cookie" }` (Pydantic `model_dump(exclude_none=True)`)            | Workflow fails with `TypeError: Cannot read properties of undefined (reading 'SWEET')`. The exception points at the guard, not at the producer that dropped the key. |
-| `partialRecord`  | `{ flavors: { SPICY: false }, caption: "a cookie" }`                            | No error. The result has no `isSweet` at all, so a caller branching on it treats the snack as not sweet.                                                             |
+| `missingSweet`  | `{ flavors: { SPICY: false, SALTY: false }, caption: "a cookie" }`                          | No error. The result has no `isSweet` at all, so a caller branching on it treats the snack as not sweet.                                                             |
 | `lowercaseKeys`  | `{ flavors: { sweet: true, salty: false, spicy: false }, caption: "a cookie" }` | No error. Same as above, although the payload says the cookie is sweet. No key matches, so the system consistently detects nothing.                                  |
 | `unknownFlavor`  | `{ flavors: { SWEET: true, SALTY: false, SPICY: false, UMAMI: true }, ... }`    | No error, `isSweet: true`. The extra `UMAMI` key passes through unnoticed.                                                                                           |
 
 Two details the tests make explicit:
 
-- In `partialRecord` and `lowercaseKeys`, `flavors.SWEET` is `undefined`, the workflow returns
+- In `missingSweet` (being a case of partial record) and `lowercaseKeys`, `flavors.SWEET` is `undefined`, the workflow returns
   `{ isSweet: undefined }`, and the payload converter drops the key. The client receives
   `{ caption: "a cookie" }`, although the type says `isSweet: boolean`. A well-behaved producer
   (`explicitlySweet` in the tests) gets `isSweet: true` through the same workflow.
@@ -88,10 +88,10 @@ but first validate the activity result. Both schemas contain the same line,
 
 For the incomplete record `{ flavors: { SPICY: false }, caption: "a cookie" }`:
 
-| Schema     | Result                                          |
-| ---------- | ----------------------------------------------- |
-| `"zod"`    | **Accepted**. `isSweet` is lost, as without Zod |
-| `"zod/v4"` | Rejected                                        |
+| Schema       | Result                                          |
+|--------------| ----------------------------------------------- |
+| `"zod (v3)"` | **Accepted**. `isSweet` is lost, as without Zod |
+| `"zod/v4"`   | Rejected                                        |
 
 With an enum as the key, Zod 3 treats the record as partial and Zod 4 as exhaustive. So whether the
 validation catches an incomplete record depends on the import path.
