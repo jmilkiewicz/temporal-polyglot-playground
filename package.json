@@ -7,15 +7,10 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "start:worker": "tsx src/worker.ts",
-    "start:client": "tsx src/client.ts",
-    "server:up": "docker compose up -d",
-    "server:down": "docker compose down",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@temporalio/activity": "1.24.0",
     "@temporalio/client": "1.24.0",
     "@temporalio/worker": "1.24.0",
     "@temporalio/workflow": "1.24.0",
@@ -28,7 +23,6 @@
     "jest": "30.5.2",
     "prettier": "3.9.9",
     "ts-jest": "29.4.14",
-    "tsx": "4.23.15",
     "typescript": "6.0.3"
   }
 }
