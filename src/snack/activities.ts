@@ -24,7 +24,10 @@ export const pythonCheckSnackVariants = {
 
   // Python: a dict that only contains the flavors the model actually looked at.
   missingSweet: async () =>
-    ({ flavors: { SPICY: false, SALTY: true }, caption: "dried fish" }) as unknown as SnackCheckResult,
+    ({
+      flavors: { SPICY: false, SALTY: true },
+      caption: "dried fish",
+    }) as unknown as SnackCheckResult,
 
   // Python: an enum serialised by `.value` with lowercase values.
   lowercaseKeys: async () =>

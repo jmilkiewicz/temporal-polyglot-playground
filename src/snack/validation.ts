@@ -14,10 +14,9 @@ export interface ActivityResultSchema<T> {
 export function parseActivityResult<T>(raw: unknown, schema: ActivityResultSchema<T>): T {
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {
-
-    const fields = [...new Set(
-      parsed.error.issues.map((issue) => String(issue.path[0] ?? "<root>"))
-    )];
+    const fields = [
+      ...new Set(parsed.error.issues.map((issue) => String(issue.path[0] ?? "<root>"))),
+    ];
     // A plain ZodError would only fail the workflow task and retry it forever. A non-retryable
     // ApplicationFailure fails the workflow execution loudly instead.
     throw ApplicationFailure.nonRetryable(

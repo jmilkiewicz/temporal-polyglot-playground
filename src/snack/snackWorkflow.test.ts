@@ -27,7 +27,10 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
   });
 
   it("loses isSweet when the exact SWEET key is missing", async () => {
-    const withoutSweet = await runSnackWorkflow(pythonCheckSnackVariants.missingSweet, snackWorkflow);
+    const withoutSweet = await runSnackWorkflow(
+      pythonCheckSnackVariants.missingSweet,
+      snackWorkflow,
+    );
     const lowerCased = await runSnackWorkflow(
       pythonCheckSnackVariants.lowercaseKeys,
       snackWorkflow,
@@ -40,7 +43,10 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
   });
 
   it("reports a sweet snack correctly and silently ignores an extra flavor", async () => {
-    const result = await runSnackWorkflow(pythonCheckSnackVariants.withUnknownFlavor, snackWorkflow);
+    const result = await runSnackWorkflow(
+      pythonCheckSnackVariants.withUnknownFlavor,
+      snackWorkflow,
+    );
 
     expect(result).toEqual({ isSweet: true, caption: "iberico" });
   });
