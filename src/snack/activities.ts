@@ -23,7 +23,7 @@ export const pythonCheckSnackVariants = {
   missingFlavors: async () => ({ caption: "a cookie" }) as unknown as SnackCheckResult,
 
   // Python: a dict that only contains the flavors the model actually looked at.
-  partialRecord: async () =>
+  missingSweet: async () =>
     ({ flavors: { SPICY: false }, caption: "a cookie" }) as unknown as SnackCheckResult,
 
   // Python: an enum serialised by `.value` with lowercase values.

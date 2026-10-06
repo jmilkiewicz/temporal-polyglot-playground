@@ -26,8 +26,8 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
     });
   });
 
-  it("loses isSweet when the SWEET key is missing", async () => {
-    const partial = await runSnackWorkflow(pythonCheckSnackVariants.partialRecord, snackWorkflow);
+  it("loses isSweet when the exact SWEET key is missing", async () => {
+    const withoutSweet = await runSnackWorkflow(pythonCheckSnackVariants.missingSweet, snackWorkflow);
     const lowerCased = await runSnackWorkflow(
       pythonCheckSnackVariants.lowercaseKeys,
       snackWorkflow,
@@ -35,7 +35,7 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
     const wellBehavedSweet = await runSnackWorkflow(explicitlySweet, snackWorkflow);
 
     expect(wellBehavedSweet.isSweet).toBe(true);
-    expect(partial).not.toHaveProperty("isSweet");
+    expect(withoutSweet).not.toHaveProperty("isSweet");
     expect(lowerCased).not.toHaveProperty("isSweet");
   });
 
@@ -47,7 +47,7 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
 
   it('still loses isSweet on a partial record validated with "zod/v3"', async () => {
     const partial = await runSnackWorkflow(
-      pythonCheckSnackVariants.partialRecord,
+      pythonCheckSnackVariants.missingSweet,
       snackWorkflowWithValidationZodV3,
     );
 
@@ -56,7 +56,7 @@ describe("snackWorkflow against a simulated Python checkSnack", () => {
 
   it('rejects a partial record validated with "zod/v4"', async () => {
     const error = await runSnackWorkflow(
-      pythonCheckSnackVariants.partialRecord,
+      pythonCheckSnackVariants.missingSweet,
       snackWorkflowWithValidationZodV4,
     ).catch((err: unknown) => err);
 
