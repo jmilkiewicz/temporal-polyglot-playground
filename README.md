@@ -62,9 +62,9 @@ export async function snackWorkflow(args: SnackCheckArgs): Promise<SnackWorkflow
 ```
 
 | Variant          | Payload sent by "Python"                                                        | Symptom                                                                                                                                                              |
-| ---------------- |---------------------------------------------------------------------------------| -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ---------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `missingFlavors` | `{ caption: "a cookie" }` (Pydantic `model_dump(exclude_none=True)`)            | Workflow fails with `TypeError: Cannot read properties of undefined (reading 'SWEET')`. The exception points at the guard, not at the producer that dropped the key. |
-| `missingSweet`  | `{ flavors: { SPICY: false, SALTY: false }, caption: "a cookie" }`                          | No error. The result has no `isSweet` at all, so a caller branching on it treats the snack as not sweet.                                                             |
+| `missingSweet`   | `{ flavors: { SPICY: false, SALTY: true }, caption: "dried fish" }`             | No error. The result has no `isSweet` at all, so a caller branching on it treats the snack as not sweet.                                                             |
 | `lowercaseKeys`  | `{ flavors: { sweet: true, salty: false, spicy: false }, caption: "a cookie" }` | No error. Same as above, although the payload says the cookie is sweet. No key matches, so the system consistently detects nothing.                                  |
 | `unknownFlavor`  | `{ flavors: { SWEET: true, SALTY: false, SPICY: false, UMAMI: true }, ... }`    | No error, `isSweet: true`. The extra `UMAMI` key passes through unnoticed.                                                                                           |
 
@@ -86,10 +86,10 @@ but first validate the activity result. Both schemas contain the same line,
 `flavors: z.record(SnackFlavor, z.boolean()).nullable()`. `schema.v3.ts` imports it from `"zod"`,
 `schema.v4.ts` from `"zod/v4"`.
 
-For the incomplete record `{ flavors: { SPICY: false }, caption: "a cookie" }`:
+For the incomplete record `{ flavors: { SPICY: false, SALTY: true }, caption: "dried fish" }`:
 
 | Schema       | Result                                          |
-|--------------| ----------------------------------------------- |
+| ------------ | ----------------------------------------------- |
 | `"zod (v3)"` | **Accepted**. `isSweet` is lost, as without Zod |
 | `"zod/v4"`   | Rejected                                        |
 
@@ -111,12 +111,12 @@ flavor that is not listed is not present. `snackWorkflowV2` validates the payloa
 non-retryable `ApplicationFailure` (type `SnackCheckResultValidationError`).
 `snackWorkflowV2ZodV4` is the same workflow with the schema imported from `"zod/v4"`.
 
-| Activity          | Payload                                | Result (both `"zod"` and `"zod/v4"`) |
-| ----------------- | -------------------------------------- | ------------------------------------ |
-| `sweetCandy`      | `{ flavors: ["SWEET"], ... }`          | `isSweet: true`                      |
-| `spicyOnly`       | `{ flavors: ["SPICY"], ... }`          | `isSweet: false`                     |
-| `lowercaseFlavor` | `{ flavors: ["sweet"], ... }`          | Rejected                             |
-| `unknownFlavor`   | `{ flavors: ["SWEET", "UMAMI"], ... }` | Rejected                             |
+| Activity          | Payload                                | Result (both `"zod v3"` and `"zod/v4"`) |
+| ----------------- | -------------------------------------- | --------------------------------------- |
+| `sweetCandy`      | `{ flavors: ["SWEET"], ... }`          | `isSweet: true`                         |
+| `spicyOnly`       | `{ flavors: ["SPICY"], ... }`          | `isSweet: false`                        |
+| `lowercaseFlavor` | `{ flavors: ["sweet"], ... }`          | Rejected                                |
+| `unknownFlavor`   | `{ flavors: ["SWEET", "UMAMI"], ... }` | Rejected                                |
 
 `spicyOnly` is the array counterpart of the incomplete record above. Both Zod versions accept it,
 and the answer is correct.
