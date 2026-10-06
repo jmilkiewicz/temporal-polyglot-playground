@@ -1,4 +1,4 @@
-# temporal-playground
+# temporal-polyglot-playground
 
 Minimal "hello world" using the Temporal TypeScript SDK (`@temporalio/*` **1.24.0**, pinned).
 
